@@ -11,7 +11,6 @@ package errgroup
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -33,12 +32,7 @@ type Group struct {
 	err     error
 }
 
-func (g *Group) done() {
-	if g.sem != nil {
-		<-g.sem
-	}
-	g.wg.Done()
-}
+func (g *Group) done() { _ = "STUB: not implemented"; return }
 
 // WithContext returns a new Group and an associated Context derived from ctx.
 //
@@ -46,19 +40,13 @@ func (g *Group) done() {
 // returns a non-nil error or the first time Wait returns, whichever occurs
 // first.
 func WithContext(ctx context.Context) (*Group, context.Context) {
-	ctx, cancel := context.WithCancelCause(ctx)
-	return &Group{cancel: cancel}, ctx
+	_ = "STUB: not implemented"
+	return nil, *new(context.Context)
 }
 
 // Wait blocks until all function calls from the Go method have returned, then
 // returns the first non-nil error (if any) from them.
-func (g *Group) Wait() error {
-	g.wg.Wait()
-	if g.cancel != nil {
-		g.cancel(g.err)
-	}
-	return g.err
-}
+func (g *Group) Wait() error { _ = "STUB: not implemented"; return nil }
 
 // Go calls the given function in a new goroutine.
 //
@@ -69,67 +57,27 @@ func (g *Group) Wait() error {
 // The first goroutine in the group that returns a non-nil error will
 // cancel the associated Context, if any. The error will be returned
 // by Wait.
-func (g *Group) Go(f func() error) {
-	if g.sem != nil {
-		g.sem <- token{}
-	}
+func (g *Group) Go(f func() error) { _ = "STUB: not implemented"; return }
 
-	g.wg.Add(1)
-	go func() {
-		defer g.done()
-
-		// It is tempting to propagate panics from f()
-		// up to the goroutine that calls Wait, but
-		// it creates more problems than it solves:
-		// - it delays panics arbitrarily,
-		//   making bugs harder to detect;
-		// - it turns f's panic stack into a mere value,
-		//   hiding it from crash-monitoring tools;
-		// - it risks deadlocks that hide the panic entirely,
-		//   if f's panic leaves the program in a state
-		//   that prevents the Wait call from being reached.
-		// See #53757, #74275, #74304, #74306.
-
-		if err := f(); err != nil {
-			g.errOnce.Do(func() {
-				g.err = err
-				if g.cancel != nil {
-					g.cancel(g.err)
-				}
-			})
-		}
-	}()
-}
+// It is tempting to propagate panics from f()
+// up to the goroutine that calls Wait, but
+// it creates more problems than it solves:
+// - it delays panics arbitrarily,
+//   making bugs harder to detect;
+// - it turns f's panic stack into a mere value,
+//   hiding it from crash-monitoring tools;
+// - it risks deadlocks that hide the panic entirely,
+//   if f's panic leaves the program in a state
+//   that prevents the Wait call from being reached.
+// See #53757, #74275, #74304, #74306.
 
 // TryGo calls the given function in a new goroutine only if the number of
 // active goroutines in the group is currently below the configured limit.
 //
 // The return value reports whether the goroutine was started.
-func (g *Group) TryGo(f func() error) bool {
-	if g.sem != nil {
-		select {
-		case g.sem <- token{}:
-			// Note: this allows barging iff channels in general allow barging.
-		default:
-			return false
-		}
-	}
+func (g *Group) TryGo(f func() error) bool { _ = "STUB: not implemented"; return false }
 
-	g.wg.Add(1)
-	go func() {
-		defer g.done()
-
-		if err := f(); err != nil {
-			g.errOnce.Do(func() {
-				g.err = err
-				if g.cancel != nil {
-					g.cancel(g.err)
-				}
-			})
-		}
-	}()
-	return true
-}
+// Note: this allows barging iff channels in general allow barging.
 
 // SetLimit limits the number of active goroutines in this group to at most n.
 // A negative value indicates no limit.
@@ -139,13 +87,4 @@ func (g *Group) TryGo(f func() error) bool {
 // goroutine without exceeding the configured limit.
 //
 // The limit must not be modified while any goroutines in the group are active.
-func (g *Group) SetLimit(n int) {
-	if n < 0 {
-		g.sem = nil
-		return
-	}
-	if active := len(g.sem); active != 0 {
-		panic(fmt.Errorf("errgroup: modify limit while %v goroutines in the group are still active", active))
-	}
-	g.sem = make(chan token, n)
-}
+func (g *Group) SetLimit(n int) { _ = "STUB: not implemented"; return }
